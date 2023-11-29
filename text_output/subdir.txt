@@ -1,5 +1,0 @@
-// Filename: subdir.ts
-
-import react from 'react';
-// End of subdir.ts
-

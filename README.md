@@ -21,7 +21,7 @@ To use the script, you need to provide the directory containing the files you wa
 ## Example
 
 ```bash
-python script_name.py -d /path/to/directory -i /path/to/ignorelist.txt -o /path/to/output
+python project2txt.py -d /path/to/directory -i /path/to/ignorelist.txt -o /path/to/output
 ```
 
 This command will process files in /path/to/directory, ignoring files listed in /path/to/ignorelist.txt, and will save the output in /path/to/output.

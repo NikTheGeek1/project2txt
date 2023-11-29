@@ -4,25 +4,26 @@ from pathlib import Path
 import fnmatch
 
 def parse_ignore_list(ignore_file):
-    with open(ignore_file, "r") as f:
-        ignore_list = [line.strip() for line in f.readlines()]
-        print(f"Ignoring {ignore_list}")
-    return ignore_list
+    try:
+        with open(ignore_file, "r") as f:
+            ignore_list = [line.strip() for line in f.readlines()]
+            print(f"Ignoring {ignore_list}")
+        return ignore_list
+    except Exception as e:
+        print(f"Error reading ignore file {ignore_file}: {e}")
+        return []
 
 def export_to_text(file_path, output_dir):
-    text_path = output_dir / f"{file_path.stem}.txt"
-    with open(file_path, 'r') as original_file, open(text_path, 'w') as text_file:
-        text_file.write(f"// Filename: {file_path.name}\n\n")
-        text_file.write(original_file.read())
-        text_file.write(f"\n// End of {file_path.name}\n\n")
-    return text_path
-
-def merge_text_files(text_files, output_path):
-    with open(output_path, 'w') as merged_file:
-        for text_file in text_files:
-            with open(text_file, 'r') as file:
-                merged_file.write(file.read() + "\n")
-
+    try:
+        text_path = output_dir / f"{file_path.stem}.txt"
+        with open(file_path, 'r') as original_file, open(text_path, 'w') as text_file:
+            text_file.write(f"// Filename: {file_path.name}\n\n")
+            text_file.write(original_file.read())
+            text_file.write(f"\n// End of {file_path.name}\n\n")
+        return text_path
+    except Exception as e:
+        print(f"Error processing file {file_path}: {e}")
+        return None
 def prepare_ignore_list(ignore_list):
     """Modify ignore patterns to match the entire path."""
     new_ignore_list = []
@@ -40,6 +41,25 @@ def prepare_ignore_list(ignore_list):
         new_ignore_list.append('*/' + pattern + '/')
     return new_ignore_list
 
+def merge_text_files(text_files, output_path):
+    try:
+        total_word_count = 0
+        with open(output_path, 'w') as merged_file:
+            for text_file in text_files:
+                with open(text_file, 'r') as file:
+                    content = file.read()
+                    word_count = len(content.split())
+                    total_word_count += word_count
+                    merged_file.write(content + "\n")
+
+            # Write the total word count at the beginning of the file
+            with open(output_path, 'r+') as file:
+                content = file.read()
+                file.seek(0, 0)
+                file.write(f"Total Word Count: {total_word_count}\n\n" + content)
+    except Exception as e:
+        print(f"Error merging files into {output_path}: {e}")
+
 def is_ignored(path, ignore_list):
     """Check if the given path matches any of the patterns in the ignore list."""
     for pattern in ignore_list:
@@ -50,16 +70,20 @@ def is_ignored(path, ignore_list):
 def process_directory(directory, ignore_list, output_dir):
     text_files = []
     ignore_list = prepare_ignore_list(ignore_list)
-    for root, dirs, files in os.walk(directory, topdown=True):
-        dirs[:] = [d for d in dirs if not is_ignored(os.path.join(root, d), ignore_list)]
+    try:
+        for root, dirs, files in os.walk(directory, topdown=True):
+            dirs[:] = [d for d in dirs if not is_ignored(os.path.join(root, d), ignore_list)]
 
-        for file in files:
-            file_path = Path(root) / file
-            if is_ignored(str(file_path), ignore_list):
-                continue
+            for file in files:
+                file_path = Path(root) / file
+                if is_ignored(str(file_path), ignore_list):
+                    continue
 
-            text_path = export_to_text(file_path, output_dir)
-            text_files.append(text_path)
+                text_path = export_to_text(file_path, output_dir)
+                if text_path:
+                    text_files.append(text_path)
+    except Exception as e:
+        print(f"Error processing directory {directory}: {e}")
     return text_files
 
 def main():
@@ -69,21 +93,24 @@ def main():
     parser.add_argument("-o", "--output", help="Output directory for text files.", default="./text_output")
 
     args = parser.parse_args()
-    directory = Path(args.directory).resolve()
-    output_dir = Path(args.output)
-    output_dir.mkdir(exist_ok=True)
+    try:
+        directory = Path(args.directory).resolve()
+        output_dir = Path(args.output)
+        output_dir.mkdir(exist_ok=True)
 
-    if args.ignore:
-        ignore_list = parse_ignore_list(args.ignore)
-    else:
-        ignore_list = []
+        if args.ignore:
+            ignore_list = parse_ignore_list(args.ignore)
+        else:
+            ignore_list = []
 
-    text_files = process_directory(directory, ignore_list, output_dir)
-    if text_files:
-        merge_text_files(text_files, output_dir / "merged_output.txt")
-        print(f"Merged text file created at {output_dir / 'merged_output.txt'}")
-    else:
-        print("No text files created.")
+        text_files = process_directory(directory, ignore_list, output_dir)
+        if text_files:
+            merge_text_files(text_files, output_dir / "merged_output.txt")
+            print(f"Merged text file created at {output_dir / 'merged_output.txt'}")
+        else:
+            print("No text files created.")
+    except Exception as e:
+        print(f"Error in main function: {e}")
 
 if __name__ == "__main__":
     main()
