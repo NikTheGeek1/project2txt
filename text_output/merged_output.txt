@@ -1,0 +1,12 @@
+// Filename: app.ts
+
+
+// End of app.ts
+
+
+// Filename: subdir.ts
+
+import react from 'react';
+// End of subdir.ts
+
+
