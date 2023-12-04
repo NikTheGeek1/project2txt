@@ -24,6 +24,7 @@ def export_to_text(file_path, output_dir):
     except Exception as e:
         print(f"Error processing file {file_path}: {e}")
         return None
+        
 def prepare_ignore_list(ignore_list):
     """Modify ignore patterns to match the entire path."""
     new_ignore_list = []

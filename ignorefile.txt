@@ -7,5 +7,7 @@ node_modules
 build
 dist
 dist_playground
+playground
+__tests__
 package-lock.json
 .DS_Store
